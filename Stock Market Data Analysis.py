@@ -10,13 +10,8 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-
 class StockAnalyzer:
-    """
-    A comprehensive stock market data analysis class for analyzing time-series data,
-    visualizing trends, calculating moving averages, and examining volume patterns.
-    """
-
+    
     def __init__(self, symbol, period='1y'):
         self.symbol = symbol.upper()
         self.period = period
@@ -45,32 +40,32 @@ class StockAnalyzer:
     def calculate_technical_indicators(self):
         if self.data is None:
             return
-        # RSI (Relative Strength Index)
+        # rsi (relative strength index)
         delta = self.data['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         self.data['RSI'] = 100 - (100 / (1 + rs))
 
-        # Bollinger Bands
+        # bollinger bands
         self.data['BB_Middle'] = self.data['Close'].rolling(window=20).mean()
         bb_std = self.data['Close'].rolling(window=20).std()
         self.data['BB_Upper'] = self.data['BB_Middle'] + (bb_std * 2)
         self.data['BB_Lower'] = self.data['BB_Middle'] - (bb_std * 2)
 
-        # Volume Moving Average
+        # volume moving average
         self.data['Volume_MA'] = self.data['Volume'].rolling(window=20).mean()
 
-        # Daily Returns
+        # daily returns
         self.data['Daily_Return'] = self.data['Close'].pct_change()
 
-        # Volatility (20-day rolling standard deviation of returns)
+        # volatility (20 day rolling standard deviation)
         self.data['Volatility'] = self.data['Daily_Return'].rolling(window=20).std() * np.sqrt(252)
 
     def analyze_volume_patterns(self):
         if self.data is None:
             return None, None
-        # Volume analysis
+        # volume analysis
         volume_stats = {
             'avg_volume': self.data['Volume'].mean(),
             'max_volume': self.data['Volume'].max(),
@@ -78,28 +73,27 @@ class StockAnalyzer:
             'volume_std': self.data['Volume'].std()
         }
 
-        # Price-Volume correlation
+        # price volume correlation
         price_volume_corr = self.data['Close'].corr(self.data['Volume'])
 
-        # High volume days (above 1.5 times average)
+        # high volume days
         high_volume_threshold = volume_stats['avg_volume'] * 1.5
         self.data['High_Volume'] = self.data['Volume'] > high_volume_threshold
 
         return volume_stats, price_volume_corr
 
     def generate_market_insights(self):
-        """Generate comprehensive market behavior insights"""
         if self.data is None:
             return None
 
-        # Calculate statistics
+        # calculate statistics
         current_price = self.data['Close'].iloc[-1]
         price_change = ((current_price - self.data['Close'].iloc[0]) / self.data['Close'].iloc[0]) * 100
         avg_volume = self.data['Volume'].mean()
         current_rsi = self.data['RSI'].iloc[-1]
         current_volatility = self.data['Volatility'].iloc[-1]
 
-        # Moving average signals
+        # moving average signals
         ma_20_current = self.data['MA_20'].iloc[-1]
         ma_50_current = self.data['MA_50'].iloc[-1]
 
@@ -177,59 +171,53 @@ class StockAnalyzer:
         if self.data is None:
             return
 
-        print(f"\n📊 Creating text-based visualizations for {self.symbol}:")
+        print(f"\n Creating text-based visualizations for {self.symbol}:")
 
-        # Price trend analysis
+        # price trend analysis
         recent_prices = self.data['Close'].tail(10)
-        print(f"\n📈 Recent 10-day price trend:")
+        print(f"\n Recent 10-day price trend:")
         for date, price in recent_prices.items():
             print(f"{date.strftime('%Y-%m-%d')}: ${price:.2f}")
 
-        # Moving average signals
-        print(f"\n🔄 Moving Average Signals (Last 5 days):")
+        # moving average signals
+        print(f"\n Moving Average Signals (Last 5 days):")
         ma_signals = self.data[['Close', 'MA_20', 'MA_50']].tail(5)
         for date, row in ma_signals.iterrows():
-            signal = "🟢 BULLISH" if row['MA_20'] > row['MA_50'] else "🔴 BEARISH"
+            signal = " BULLISH" if row['MA_20'] > row['MA_50'] else "🔴 BEARISH"
             print(
                 f"{date.strftime('%Y-%m-%d')}: {signal} | Close: ${row['Close']:.2f} | MA20: ${row['MA_20']:.2f} | MA50: ${row['MA_50']:.2f}")
 
-        # Volume analysis
-        print(f"\n📊 Volume Analysis:")
+        # volume analysis
+        print(f"\n Volume Analysis:")
         high_volume_days = self.data[self.data['High_Volume'] == True].tail(5)
         if not high_volume_days.empty:
             print("Recent high volume days:")
             for date, row in high_volume_days.iterrows():
                 print(f"{date.strftime('%Y-%m-%d')}: {row['Volume']:,} shares (${row['Close']:.2f})")
 
-        # RSI levels
-        print(f"\n📊 RSI Trend (Last 5 days):")
+        # rsi levels
+        print(f"\n RSI Trend (Last 5 days):")
         rsi_data = self.data[['Close', 'RSI']].tail(5)
         for date, row in rsi_data.iterrows():
             if row['RSI'] > 70:
-                signal = "⚠️ OVERBOUGHT"
+                signal = "OVERBOUGHT"
             elif row['RSI'] < 30:
-                signal = "⚠️ OVERSOLD"
+                signal = "OVERSOLD"
             else:
-                signal = "✅ NEUTRAL"
+                signal = "NEUTRAL"
             print(f"{date.strftime('%Y-%m-%d')}: RSI {row['RSI']:.1f} {signal}")
 
     def plot_matplotlib_analysis(self, save_plots=True):
-        """Create static plots using Matplotlib"""
         if self.data is None:
             return
-
         try:
-            # Set matplotlib backend and style
             import matplotlib
             if save_plots:
                 matplotlib.use('Agg')
             plt.style.use('default')
             sns.set_palette("husl")
-
             fig, axes = plt.subplots(2, 2, figsize=(15, 12))
             fig.suptitle(f'{self.symbol} Stock Market Analysis', fontsize=16, fontweight='bold')
-
-            # Price and Moving Averages
             axes[0, 0].plot(self.data.index, self.data['Close'], label='Close Price', linewidth=2, color='black')
             axes[0, 0].plot(self.data.index, self.data['MA_20'], label='MA 20', linewidth=2, color='orange')
             axes[0, 0].plot(self.data.index, self.data['MA_50'], label='MA 50', linewidth=2, color='blue')
@@ -237,16 +225,12 @@ class StockAnalyzer:
             axes[0, 0].set_ylabel('Price ($)')
             axes[0, 0].legend()
             axes[0, 0].grid(True, alpha=0.3)
-
-            # Volume Analysis
             axes[0, 1].bar(self.data.index, self.data['Volume'], alpha=0.7, color='lightblue', label='Volume')
             axes[0, 1].plot(self.data.index, self.data['Volume_MA'], color='red', linewidth=2, label='Volume MA')
             axes[0, 1].set_title('Volume Patterns')
             axes[0, 1].set_ylabel('Volume')
             axes[0, 1].legend()
             axes[0, 1].grid(True, alpha=0.3)
-
-            # Daily Returns Distribution
             axes[1, 0].hist(self.data['Daily_Return'].dropna(), bins=50, alpha=0.7, color='green', edgecolor='black')
             axes[1, 0].set_title('Daily Returns Distribution')
             axes[1, 0].set_xlabel('Daily Return')
@@ -254,20 +238,17 @@ class StockAnalyzer:
             axes[1, 0].axvline(self.data['Daily_Return'].mean(), color='red', linestyle='--', label='Mean')
             axes[1, 0].legend()
             axes[1, 0].grid(True, alpha=0.3)
-
-            # Price vs Volume Correlation
             axes[1, 1].scatter(self.data['Volume'], self.data['Close'], alpha=0.5, color='purple')
             axes[1, 1].set_title('Price vs Volume Correlation')
             axes[1, 1].set_xlabel('Volume')
             axes[1, 1].set_ylabel('Close Price ($)')
             axes[1, 1].grid(True, alpha=0.3)
-
             plt.tight_layout()
 
             if save_plots:
                 filename = f'{self.symbol}_analysis.png'
                 plt.savefig(filename, dpi=300, bbox_inches='tight')
-                print(f"📊 Chart saved as {filename}")
+                print(f"Chart saved as {filename}")
             else:
                 try:
                     plt.show()
@@ -275,7 +256,7 @@ class StockAnalyzer:
                     print(f"Display error: {e}")
                     filename = f'{self.symbol}_analysis.png'
                     plt.savefig(filename, dpi=300, bbox_inches='tight')
-                    print(f"📊 Chart saved as {filename}")
+                    print(f"Chart saved as {filename}")
 
             plt.close()
 
@@ -284,12 +265,10 @@ class StockAnalyzer:
             print("Continuing with analysis...")
 
     def plot_comprehensive_analysis(self):
-        """Create comprehensive interactive plots using Plotly"""
         if self.data is None:
             return
 
         try:
-            # Create subplots
             fig = make_subplots(
                 rows=4, cols=1,
                 shared_xaxes=True,
@@ -302,8 +281,6 @@ class StockAnalyzer:
                 ),
                 row_heights=[0.4, 0.2, 0.2, 0.2]
             )
-
-            # Price and Moving Averages
             fig.add_trace(go.Candlestick(
                 x=self.data.index,
                 open=self.data['Open'],
@@ -326,8 +303,7 @@ class StockAnalyzer:
                 name='MA 50',
                 line=dict(color='blue', width=2)
             ), row=1, col=1)
-
-            # Volume
+            
             colors = ['red' if row['Close'] < row['Open'] else 'green' for index, row in self.data.iterrows()]
             fig.add_trace(go.Bar(
                 x=self.data.index,
@@ -343,7 +319,6 @@ class StockAnalyzer:
                 line=dict(color='purple', width=2)
             ), row=2, col=1)
 
-            # RSI
             fig.add_trace(go.Scatter(
                 x=self.data.index,
                 y=self.data['RSI'],
@@ -354,7 +329,6 @@ class StockAnalyzer:
             fig.add_hline(y=70, line_dash="dash", line_color="red", row=3, col=1)
             fig.add_hline(y=30, line_dash="dash", line_color="green", row=3, col=1)
 
-            # Bollinger Bands
             fig.add_trace(go.Scatter(
                 x=self.data.index,
                 y=self.data['Close'],
@@ -392,9 +366,7 @@ class StockAnalyzer:
 
 # Example usage and demonstration
 def main():
-    """Main function to demonstrate the stock analysis functionality"""
 
-    # Analyze multiple stocks
     stocks = ['AAPL', 'GOOGL', 'MSFT', 'TSLA']
 
     print("COMPREHENSIVE STOCK MARKET DATA ANALYSIS")
@@ -410,24 +382,15 @@ def main():
         print(f"\nAnalyzing {symbol}...")
 
         try:
-            # Create analyzer instance
             analyzer = StockAnalyzer(symbol, period='1y')
 
             if analyzer.data is not None:
-                # Calculate technical indicators
                 analyzer.calculate_moving_averages(20, 50)
                 analyzer.calculate_technical_indicators()
-
-                # Print analysis summary
                 analyzer.print_analysis_summary()
-
-                # Create alternative text-based visualizations
                 analyzer.create_alternative_visualizations()
-
-                # Generate visualizations (with error handling)
                 print(f"\nGenerating chart visualizations for {symbol}...")
                 analyzer.plot_matplotlib_analysis(save_plots=True)
-                # analyzer.plot_comprehensive_analysis()  # Uncomment for interactive plots
 
         except Exception as e:
             print(f"Error analyzing {symbol}: {e}")
@@ -435,13 +398,13 @@ def main():
         print("-" * 50)
 
     print("\nAnalysis complete! The project demonstrates:")
-    print("✓ Data wrangling with yfinance and pandas")
-    print("✓ Time-series analysis and trend identification")
-    print("✓ Moving average calculations and signals")
-    print("✓ Volume pattern analysis")
-    print("✓ Technical indicator computation")
-    print("✓ Comprehensive visualization with matplotlib and plotly")
-    print("✓ Market behavior explanation and insights")
+    print("-Data wrangling with yfinance and pandas")
+    print("-Time-series analysis and trend identification")
+    print("-Moving average calculations and signals")
+    print("-Volume pattern analysis")
+    print("-Technical indicator computation")
+    print("-Comprehensive visualization with matplotlib and plotly")
+    print("-Market behavior explanation and insights")
 
 
 if __name__ == "__main__":
