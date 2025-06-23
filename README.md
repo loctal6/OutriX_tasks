@@ -24,14 +24,14 @@ This project was created for my internship at [<ins>Outrix</ins>](https://www.li
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/stock-market-analysis.git
-cd stock-market-analysis
+git clone https://github.com/loctal6/OutriX_tasks
+cd OutriX_tasks
 ```
 
 2. Create a virtual environment:
 ```bash
 python -m venv stock_env
-source stock_env/bin/activate  # On Windows: stock_env\Scripts\activate
+stock_env\Scripts\activate
 ```
 
 3. Install required dependencies:
